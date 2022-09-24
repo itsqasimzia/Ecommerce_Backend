@@ -1,8 +1,9 @@
 const { toTitleCase, validateEmail } = require("../config/function");
 const bcrypt = require("bcryptjs");
-const userModel = require("../models/users");
+const db = require("../models/index").users;
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config/keys");
+const userModel = db;
 
 class Auth {
   async isAdmin(req, res) {
@@ -55,8 +56,10 @@ class Auth {
         } else {
           // If Email & Number exists in Database then:
           try {
+            console.log("email", email);
+
             password = bcrypt.hashSync(password, 10);
-            const data = await userModel.findOne({ email: email });
+            const data = await userModel.findOne({ where: { email } });
             if (data) {
               error = {
                 ...error,
@@ -109,7 +112,7 @@ class Auth {
       });
     }
     try {
-      const data = await userModel.findOne({ email: email });
+      const data = await userModel.findOne({ where: { email: email } });
       if (!data) {
         return res.json({
           error: "Invalid email or password",

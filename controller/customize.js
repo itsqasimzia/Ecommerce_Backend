@@ -3,12 +3,12 @@ const categoryModel = require("../models/categories");
 const productModel = require("../models/products");
 const orderModel = require("../models/orders");
 const userModel = require("../models/users");
-const customizeModel = require("../models/customize");
+const customizeModel = require("../models/index").customizes;
 
 class Customize {
   async getImages(req, res) {
     try {
-      let Images = await customizeModel.find({});
+      let Images = await customizeModel.findAll({});
       if (Images) {
         return res.json({ Images });
       }
@@ -44,7 +44,9 @@ class Customize {
         let deletedSlideImage = await customizeModel.findById(id);
         const filePath = `../server/public/uploads/customize/${deletedSlideImage.slideImage}`;
 
-        let deleteImage = await customizeModel.findByIdAndDelete(id);
+        let deleteImage = await customizeModel.destroy({
+          where: { id: id },
+        });
         if (deleteImage) {
           // Delete Image from uploads -> customizes folder
           fs.unlink(filePath, (err) => {
@@ -62,7 +64,8 @@ class Customize {
 
   async getAllData(req, res) {
     try {
-      let Categories = await categoryModel.find({}).count();
+      // let Categories = await categoryModel.findAll({}).count();
+      let Categories = await categoryModel.findAll({});
       let Products = await productModel.find({}).count();
       let Orders = await orderModel.find({}).count();
       let Users = await userModel.find({}).count();

@@ -35,23 +35,24 @@ const customizeRouter = require("./routes/customize");
 // Import Auth middleware for check user login or not~
 const { loginCheck } = require("./middleware/auth");
 const CreateAllFolder = require("./config/uploadFolderCreateScript");
+require("./models/index");
 
 /* Create All Uploads Folder if not exists | For Uploading Images */
 CreateAllFolder();
 
 // Database Connection
-mongoose
-  .connect(process.env.DATABASE, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-  })
-  .then(() =>
-    console.log(
-      "==============Mongodb Database Connected Successfully=============="
-    )
-  )
-  .catch((err) => console.log("Database Not Connected !!!"));
+// mongoose
+//   .connect(process.env.DATABASE, {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+//     useCreateIndex: true,
+//   })
+//   .then(() =>
+//     console.log(
+//       "==============Mongodb Database Connected Successfully=============="
+//     )
+//   )
+//   .catch((err) => console.log("Database Not Connected !!!"));
 
 // Middleware
 app.use(morgan("dev"));

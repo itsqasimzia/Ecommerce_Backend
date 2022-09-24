@@ -1,4 +1,6 @@
-const productModel = require("../models/products");
+const productModel = require("../models/index").products;
+const categoriesModel = require("../models/index").categories;
+const reviewsModel = require("../models/index").reviews;
 const fs = require("fs");
 const path = require("path");
 
@@ -29,10 +31,15 @@ class Product {
 
   async getAllProduct(req, res) {
     try {
-      let Products = await productModel
-        .find({})
-        .populate("pCategory", "_id cName")
-        .sort({ _id: -1 });
+      let Products = await productModel.findAll({
+        include: [
+          {
+            model: categoriesModel,
+            attributes: ["id", "cName"],
+          },
+        ],
+      });
+
       if (Products) {
         return res.json({ Products });
       }
@@ -44,6 +51,7 @@ class Product {
   async postAddProduct(req, res) {
     let { pName, pDescription, pPrice, pQuantity, pCategory, pOffer, pStatus } =
       req.body;
+
     let images = req.files;
     // Validation
     if (
@@ -75,6 +83,12 @@ class Product {
         for (const img of images) {
           allImages.push(img.filename);
         }
+
+        const catg = await categoriesModel.findOne({
+          where: { cName: pCategory },
+        });
+        const catgId = catg?.id;
+
         let newProduct = new productModel({
           pImages: allImages,
           pName,
@@ -84,6 +98,7 @@ class Product {
           pCategory,
           pOffer,
           pStatus,
+          categoryId: catgId,
         });
         let save = await newProduct.save();
         if (save) {
@@ -151,11 +166,18 @@ class Product {
         Product.deleteImages(pImages.split(","), "string");
       }
       try {
-        let editProduct = productModel.findByIdAndUpdate(pId, editData);
-        editProduct.exec((err) => {
-          if (err) console.log(err);
-          return res.json({ success: "Product edit successfully" });
-        });
+        productModel
+          .update(editData, {
+            where: { id: pId },
+          })
+          .then((resp) => {
+            return res.json({
+              success: "Product edit successfully",
+            });
+          })
+          .catch((err) => {
+            console.log("update error", err);
+          });
       } catch (err) {
         console.log(err);
       }
@@ -168,8 +190,10 @@ class Product {
       return res.json({ error: "All filled must be required" });
     } else {
       try {
-        let deleteProductObj = await productModel.findById(pId);
-        let deleteProduct = await productModel.findByIdAndDelete(pId);
+        let deleteProductObj = await productModel.findOne({
+          where: { id: pId },
+        });
+        let deleteProduct = await productModel.destroy({ where: { id: pId } });
         if (deleteProduct) {
           // Delete Image from uploads -> products folder
           Product.deleteImages(deleteProductObj.pImages, "string");
@@ -188,7 +212,19 @@ class Product {
     } else {
       try {
         let singleProduct = await productModel
-          .findById(pId)
+          .findOne({
+            where: { id: pId },
+            include: [
+              {
+                model: categoriesModel,
+                attributes: ["cName"],
+              },
+              {
+                model: reviewsModel,
+                attributes: ["cName"],
+              },
+            ],
+          })
           .populate("pCategory", "cName")
           .populate("pRatingsReviews.user", "name email userImage");
         if (singleProduct) {
@@ -278,7 +314,9 @@ class Product {
     if (!pId || !rating || !review || !uId) {
       return res.json({ error: "All filled must be required" });
     } else {
-      let checkReviewRatingExists = await productModel.findOne({ _id: pId });
+      let checkReviewRatingExists = await reviewsModel.findOne({
+        where: { id: pId },
+      });
       if (checkReviewRatingExists.pRatingsReviews.length > 0) {
         checkReviewRatingExists.pRatingsReviews.map((item) => {
           if (item.user === uId) {
