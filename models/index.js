@@ -45,7 +45,11 @@ db.products.belongsTo(db.categories);
 
 // create foreign key reviewid in products table
 db.reviews.hasOne(db.products);
+db.products.hasMany(db.reviews);
 db.products.belongsTo(db.reviews);
+
+db.users.hasOne(db.reviews);
+// db.users.hasMany(db.reviews);
 
 // db.users.hasMany(db.orders);
 // db.orders.belongsTo(db.users);

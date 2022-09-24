@@ -5,6 +5,9 @@ module.exports = (sequilize, DataTypes) => {
       review: {
         type: DataTypes.STRING,
       },
+      rating: {
+        type: DataTypes.INTEGER,
+      },
       createdAt: {
         type: DataTypes.DATE,
         default: Date.now(),

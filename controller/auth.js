@@ -27,7 +27,8 @@ class Auth {
 
   /* User Registration/Signup controller  */
   async postSignup(req, res) {
-    let { name, email, password, cPassword } = req.body;
+    let { name, email, password, cPassword, userRole } = req.body;
+    console.log(userRole);
     let error = {};
     if (!name || !email || !password || !cPassword) {
       error = {
@@ -74,7 +75,7 @@ class Auth {
                 email,
                 password,
                 // ========= Here role 1 for admin signup role 0 for customer signup =========
-                userRole: 1, // Field Name change to userRole from role
+                userRole: userRole, // Field Name change to userRole from role
               });
               newUser
                 .save()
@@ -121,7 +122,7 @@ class Auth {
         const login = await bcrypt.compare(password, data.password);
         if (login) {
           const token = jwt.sign(
-            { _id: data._id, role: data.userRole },
+            { _id: data.id, role: data.userRole },
             JWT_SECRET
           );
           const encode = jwt.verify(token, JWT_SECRET);
